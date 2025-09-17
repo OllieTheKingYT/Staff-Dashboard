@@ -65,6 +65,13 @@
       background-color: #005fa3;
     }
 
+    .oauth-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
     .message {
       margin-top: 15px;
       font-size: 0.9em;
@@ -82,7 +89,7 @@
 <body>
   <div class="container">
     <h1>Staff Login</h1>
-    <p>Enter your JoyAccount credentials to access the dashboard.</p>
+    <p>Enter your JoyAccount credentials or continue with OAuth.</p>
 
     <form id="login-form">
       <input type="email" id="email" placeholder="Email" required />
@@ -91,35 +98,48 @@
       <button type="button" id="signup-btn">Sign Up</button>
     </form>
 
+    <div class="oauth-buttons">
+      <button id="google-login">Continue with Google</button>
+      <button id="github-login">Continue with GitHub</button>
+    </div>
+
     <div id="message" class="message"></div>
   </div>
 
   <script type="module">
-    // Firebase config
     const firebaseConfig = {
-      apiKey: "AIzaSyBk_k17IxDi2AJmDmN-iHzTV7CSOQO_VZo",
-      authDomain: "joycode-studios.firebaseapp.com",
-      projectId: "joycode-studios",
-      storageBucket: "joycode-studios.appspot.com",
-      messagingSenderId: "633743383003",
-      appId: "1:633743383003:web:155a68ae785d38c2096ffe"
+      apiKey: "AIzaSyCXpn0TM_lD1TUzdI0DlPB3LHar8vhhJag",
+      authDomain: "joycode-studios-staff.firebaseapp.com",
+      projectId: "joycode-studios-staff",
+      storageBucket: "joycode-studios-staff.firebasestorage.app",
+      messagingSenderId: "519314736323",
+      appId: "1:519314736323:web:2f043497ad28cf2ab90e76"
     };
 
-    // Firebase setup
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signInWithPopup,
+      GoogleAuthProvider,
+      GithubAuthProvider
+    } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const googleProvider = new GoogleAuthProvider();
+    const githubProvider = new GithubAuthProvider();
 
     const loginForm = document.getElementById("login-form");
     const messageBox = document.getElementById("message");
     const signupBtn = document.getElementById("signup-btn");
+    const googleBtn = document.getElementById("google-login");
+    const githubBtn = document.getElementById("github-login");
 
-    // 🔁 Email-based redirect map
     const redirectMap = {
       "harper@github.com": "home-d109a37f-3ce5-4e85-a48f-9559f4e086fd.html",
-      "ollie@google.com": "home-2bedf666-7914-4888-b3a0-16379e1d4ee3.html"
+      "your.real.email@gmail.com": "home-2bedf666-7914-4888-b3a0-16379e1d4ee3.html"
     };
 
     loginForm.addEventListener("submit", (e) => {
@@ -129,18 +149,7 @@
 
       signInWithEmailAndPassword(auth, email, password)
         .then(() => {
-          messageBox.textContent = "Login successful. Redirecting...";
-          messageBox.className = "message success";
-
-          const redirectURL = redirectMap[email.toLowerCase()];
-          if (redirectURL) {
-            setTimeout(() => {
-              window.location.href = redirectURL;
-            }, 1500);
-          } else {
-            messageBox.textContent = "Login succeeded, but no dashboard assigned to this account.";
-            messageBox.className = "message error";
-          }
+          handleRedirect(email);
         })
         .catch((error) => {
           messageBox.textContent = error.message;
@@ -162,6 +171,44 @@
           messageBox.className = "message error";
         });
     });
+
+    googleBtn.addEventListener("click", () => {
+      signInWithPopup(auth, googleProvider)
+        .then((result) => {
+          const email = result.user.email.toLowerCase();
+          handleRedirect(email);
+        })
+        .catch((error) => {
+          messageBox.textContent = error.message;
+          messageBox.className = "message error";
+        });
+    });
+
+    githubBtn.addEventListener("click", () => {
+      signInWithPopup(auth, githubProvider)
+        .then((result) => {
+          const email = result.user.email.toLowerCase();
+          handleRedirect(email);
+        })
+        .catch((error) => {
+          messageBox.textContent = error.message;
+          messageBox.className = "message error";
+        });
+    });
+
+    function handleRedirect(email) {
+      const redirectURL = redirectMap[email];
+      if (redirectURL) {
+        messageBox.textContent = "Login successful. Redirecting...";
+        messageBox.className = "message success";
+        setTimeout(() => {
+          window.location.href = redirectURL;
+        }, 1500);
+      } else {
+        messageBox.textContent = "Login succeeded, but no dashboard assigned to this account.";
+        messageBox.className = "message error";
+      }
+    }
   </script>
 </body>
 </html>
